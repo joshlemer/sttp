@@ -1,3 +1,5 @@
+import org.scalajs.sbtplugin.cross.CrossProject
+
 val commonSettings = Seq(
   organization := "com.softwaremill.sttp",
   scalaVersion := "2.12.4",
@@ -44,10 +46,12 @@ val circeVersion = "0.8.0"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4"
 
 lazy val rootProject = (project in file("."))
+//  .enablePlugins(ScalaJSPlugin)
   .settings(commonSettings: _*)
   .settings(publishArtifact := false, name := "sttp")
   .aggregate(
-    core,
+    coreJVM,
+    coreJS,
     akkaHttpBackend,
     asyncHttpClientBackend,
     asyncHttpClientFutureBackend,
@@ -57,12 +61,13 @@ lazy val rootProject = (project in file("."))
     asyncHttpClientFs2Backend,
     okhttpBackend,
     okhttpMonixBackend,
-    circe,
+    circeJVM,
+    circeJS,
     json4s,
     tests
   )
 
-lazy val core: Project = (project in file("core"))
+lazy val core: CrossProject = (crossProject in file("core"))
   .settings(commonSettings: _*)
   .settings(
     name := "core",
@@ -72,6 +77,10 @@ lazy val core: Project = (project in file("core"))
     )
   )
 
+lazy val coreJVM = core.jvm
+
+lazy val coreJS = core.js
+
 lazy val akkaHttpBackend: Project = (project in file("akka-http-backend"))
   .settings(commonSettings: _*)
   .settings(
@@ -79,7 +88,7 @@ lazy val akkaHttpBackend: Project = (project in file("akka-http-backend"))
     libraryDependencies ++= Seq(
       akkaHttp
     )
-  ) dependsOn core
+  ) dependsOn coreJVM
 
 lazy val asyncHttpClientBackend: Project = (project in file(
   "async-http-client-backend"))
@@ -89,7 +98,7 @@ lazy val asyncHttpClientBackend: Project = (project in file(
     libraryDependencies ++= Seq(
       "org.asynchttpclient" % "async-http-client" % "2.0.37"
     )
-  ) dependsOn core
+  ) dependsOn coreJVM
 
 lazy val asyncHttpClientFutureBackend: Project = (project in file(
   "async-http-client-backend/future"))
@@ -143,7 +152,7 @@ lazy val okhttpBackend: Project = (project in file("okhttp-backend"))
     libraryDependencies ++= Seq(
       "com.squareup.okhttp3" % "okhttp" % "3.9.0"
     )
-  ) dependsOn core
+  ) dependsOn coreJVM
 
 lazy val okhttpMonixBackend: Project = (project in file("okhttp-backend/monix"))
   .settings(commonSettings: _*)
@@ -152,16 +161,20 @@ lazy val okhttpMonixBackend: Project = (project in file("okhttp-backend/monix"))
     libraryDependencies ++= Seq(monix)
   ) dependsOn okhttpBackend
 
-lazy val circe: Project = (project in file("json/circe"))
+lazy val circe: CrossProject = (crossProject in file("json/circe"))
   .settings(commonSettings: _*)
   .settings(
     name := "circe",
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion,
+      "io.circe" %%% "circe-core" % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion,
       scalaTest % "test"
     )
   ) dependsOn core
+
+lazy val circeJVM = circe.jvm
+
+lazy val circeJS = circe.js
 
 lazy val json4s: Project = (project in file("json/json4s"))
   .settings(commonSettings: _*)
@@ -171,7 +184,7 @@ lazy val json4s: Project = (project in file("json/json4s"))
       "org.json4s" %% "json4s-native" % "3.5.3",
       scalaTest % "test"
     )
-  ) dependsOn core
+  ) dependsOn coreJVM
 
 lazy val tests: Project = (project in file("tests"))
   .settings(commonSettings: _*)
@@ -186,5 +199,5 @@ lazy val tests: Project = (project in file("tests"))
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     ).map(_ % "test"),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
-  ) dependsOn (core, akkaHttpBackend, asyncHttpClientFutureBackend, asyncHttpClientScalazBackend,
+  ) dependsOn (coreJVM, akkaHttpBackend, asyncHttpClientFutureBackend, asyncHttpClientScalazBackend,
 asyncHttpClientMonixBackend, asyncHttpClientCatsBackend, asyncHttpClientFs2Backend, okhttpMonixBackend)
