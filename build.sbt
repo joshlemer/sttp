@@ -64,7 +64,8 @@ lazy val rootProject = (project in file("."))
     circeJVM,
     circeJS,
     json4s,
-    tests
+    testsJVM,
+    testsJS
   )
 
 lazy val core: CrossProject = (crossProject in file("core"))
@@ -73,6 +74,7 @@ lazy val core: CrossProject = (crossProject in file("core"))
     name := "core",
     libraryDependencies ++= Seq(
       "org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
+      "org.scalatest" %%% "scalatest" % "3.0.4" % "test",
       scalaTest % "test"
     )
   )
@@ -186,7 +188,7 @@ lazy val json4s: Project = (project in file("json/json4s"))
     )
   ) dependsOn coreJVM
 
-lazy val tests: Project = (project in file("tests"))
+lazy val tests: CrossProject = (crossProject in file("tests"))
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false,
@@ -199,5 +201,16 @@ lazy val tests: Project = (project in file("tests"))
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     ).map(_ % "test"),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
-  ) dependsOn (coreJVM, akkaHttpBackend, asyncHttpClientFutureBackend, asyncHttpClientScalazBackend,
-asyncHttpClientMonixBackend, asyncHttpClientCatsBackend, asyncHttpClientFs2Backend, okhttpMonixBackend)
+  ) dependsOn core
+
+lazy val testsJVM = tests.jvm.dependsOn(
+  akkaHttpBackend,
+  asyncHttpClientFutureBackend,
+  asyncHttpClientScalazBackend,
+  asyncHttpClientMonixBackend,
+  asyncHttpClientCatsBackend,
+  asyncHttpClientFs2Backend,
+  okhttpMonixBackend
+)
+
+lazy val testsJS = tests.js

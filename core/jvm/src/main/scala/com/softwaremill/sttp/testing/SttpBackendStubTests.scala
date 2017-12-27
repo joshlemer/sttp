@@ -3,10 +3,9 @@ package com.softwaremill.sttp.testing
 import java.io.ByteArrayInputStream
 import java.util.concurrent.TimeoutException
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import com.softwaremill.sttp._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class SttpBackendStubTests extends FlatSpec with Matchers with ScalaFutures {
   private val testingStub = SttpBackendStub(HttpURLConnectionBackend())
